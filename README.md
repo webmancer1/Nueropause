@@ -1,21 +1,16 @@
 <div align="center">
 
-# 🧠 Neuropause
+#  Neuropause
 ### *Productivity Guardian*
 
 **A lightweight, always-on break reminder for Linux desktops.**  
 Monitors your active work time and nudges you to rest before fatigue sets in.
 
-![Python](https://img.shields.io/badge/Python-3.14-blue?style=flat-square&logo=python)
-![PyQt6](https://img.shields.io/badge/PyQt6-6.11-green?style=flat-square&logo=qt)
-![Platform](https://img.shields.io/badge/Platform-Linux%20%28X11%29-orange?style=flat-square&logo=linux)
-![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)
-
 </div>
 
 ---
 
-## ✨ What it does
+##  What it does
 
 Neuropause sits quietly in your **system tray** and tracks how long you've been working. After your configured work period (default: 50 min), it takes over the screen with a calming full-screen overlay that counts down your break and rotates wellness prompts — reminding you to rest your eyes, stretch, or drink water.
 
@@ -23,44 +18,22 @@ When the break is done, it gets out of your way and the cycle resets.
 
 ---
 
-## 🖥️ Features
+##  Features
 
 | Feature | Details |
 |---|---|
-| 🕐 **Work-period tracking** | Counts active keyboard/mouse time; pauses automatically when you're idle |
-| 🌑 **Full-screen break overlay** | Dark, distraction-free overlay with a live countdown timer |
-| 💡 **Wellness prompts** | Rotating reminders: eye exercises, stretching, hydration, breathing |
-| ⚙️ **Adjustable timers** | Set your own work period (1–180 min) and break duration (1–60 min) via the tray menu |
-| 🔔 **System tray icon** | Pause monitoring, trigger a break immediately, or open settings — all from the tray |
-| 🚀 **Auto-start on login** | Installed as an XDG autostart entry; launches automatically every time you log in |
-| 🗄️ **Session logging** | Every break is recorded to a local SQLite database for future reference |
-| 📋 **Crash-safe logging** | Logs to `~/.local/share/productivity-guardian/app.log` |
+|  **Work-period tracking** | Counts active keyboard/mouse time; pauses automatically when you're idle |
+|  **Full-screen break overlay** | Dark, distraction-free overlay with a live countdown timer |
+|  **Wellness prompts** | Rotating reminders: eye exercises, stretching, hydration, breathing |
+|  **Adjustable timers** | Set your own work period (1–180 min) and break duration (1–60 min) via the tray menu |
+|  **System tray icon** | Pause monitoring, trigger a break immediately, or open settings — all from the tray |
+|  **Auto-start on login** | Installed as an XDG autostart entry; launches automatically every time you log in |
+|  **Session logging** | Every break is recorded to a local SQLite database for future reference |
+|  **Crash-safe logging** | Logs to `~/.local/share/productivity-guardian/app.log` |
 
 ---
 
-## 📁 Project Structure
-
-```
-Neuropause/
-├── run.sh                          # Detached launcher (use this to start the app)
-├── productivity_guardian/
-│   ├── main.py                     # App entry-point & system tray logic
-│   ├── config.py                   # All tunable constants
-│   ├── database.py                 # SQLite session logger
-│   ├── engine/
-│   │   ├── rule_engine.py          # Decides when to trigger a break
-│   │   └── wellness_engine.py      # Rotates wellness prompts
-│   ├── monitor/
-│   │   └── activity_tracker.py     # Keyboard/mouse idle detection (pynput)
-│   └── ui/
-│       ├── break_overlay.py        # Full-screen break countdown widget
-│       └── settings_dialog.py      # Tray → Settings… dialog
-└── .venv/                          # Python virtual environment
-```
-
----
-
-## ⚡ Quick Start
+##  Quick Start
 
 ### 1. Clone & enter the project
 
@@ -97,27 +70,9 @@ The app starts in the background and appears as a **system tray icon**. Close th
 
 ---
 
-## 🔄 Auto-start on Login (already installed)
 
-An XDG autostart entry is created at:
 
-```
-~/.config/autostart/productivity-guardian.desktop
-```
-
-GNOME reads this at login and launches the app automatically, **10 seconds after your desktop loads**. No manual steps needed after the first run.
-
-```bash
-# Confirm it's registered
-ls ~/.config/autostart/productivity-guardian.desktop
-
-# Disable auto-start (without deleting)
-# Go to: GNOME Settings → Apps → Startup Applications
-```
-
----
-
-## ⚙️ Configuring Timers
+##  Configuring Timers
 
 **Via the tray icon (recommended):**
 
@@ -143,7 +98,7 @@ PROMPT_ROTATE_SECONDS         = 10       # Wellness prompt changes every 10 s
 
 ---
 
-## 🧰 Tray Menu Reference
+##  Tray Menu Reference
 
 | Action | Description |
 |---|---|
@@ -154,7 +109,7 @@ PROMPT_ROTATE_SECONDS         = 10       # Wellness prompt changes every 10 s
 
 ---
 
-## 🛠️ Useful Commands
+##  Useful Commands
 
 ```bash
 # Start the app (detached from terminal)
@@ -175,7 +130,7 @@ tail -f ~/.local/share/productivity-guardian/app.log
 
 ---
 
-## 📦 Dependencies
+##  Dependencies
 
 | Package | Version | Purpose |
 |---|---|---|
@@ -187,7 +142,7 @@ tail -f ~/.local/share/productivity-guardian/app.log
 
 ---
 
-## 🗄️ Data Storage
+##  Data Storage
 
 All data is stored locally — nothing is sent anywhere.
 
@@ -198,14 +153,14 @@ All data is stored locally — nothing is sent anywhere.
 
 ---
 
-## 🩺 Wellness Prompts
+##  Wellness Prompts
 
 The break overlay cycles through these reminders during your break:
 
-- 👁️ **Look 20 feet away for 20 seconds** *(20-20-20 rule for eye strain)*
-- 🧘 **Stretch**
-- 💧 **Drink water**
-- 🌬️ **Deep breathing**
+-  **Look 20 feet away for 20 seconds** *(20-20-20 rule for eye strain)*
+-  **Stretch**
+-  **Drink water**
+-  **Deep breathing**
 
 You can add or edit prompts in `config.py`:
 
@@ -219,16 +174,5 @@ WELLNESS_PROMPTS = [
 ]
 ```
 
----
 
-## 📄 License
 
-MIT — do whatever you like with it.
-
----
-
-<div align="center">
-
-Made with 🧠 to protect your focus and your health.
-
-</div>
