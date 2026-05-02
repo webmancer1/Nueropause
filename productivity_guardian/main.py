@@ -53,6 +53,17 @@ class ProductivityGuardianApp(QtWidgets.QApplication):
         self.tray_icon.setToolTip(TRAY_TOOLTIP)
 
         menu = QtWidgets.QMenu()
+
+        # --- Countdown widget at top of menu ---
+        self._countdown_action = QtGui.QAction("⏱ Next break in --:--", self)
+        self._countdown_action.setEnabled(False)  # non-clickable display only
+        font = self._countdown_action.font()
+        font.setBold(True)
+        self._countdown_action.setFont(font)
+        menu.addAction(self._countdown_action)
+        menu.addSeparator()
+        # ---------------------------------------
+
         self.pause_action = QtGui.QAction("Pause monitoring", self)
         self.pause_action.setCheckable(True)
         self.pause_action.toggled.connect(self._set_monitoring_paused)
@@ -76,6 +87,7 @@ class ProductivityGuardianApp(QtWidgets.QApplication):
         self.tray_icon.show()
 
     def _monitor_loop(self) -> None:
+        self._update_countdown()
         if self._monitoring_paused:
             return
         is_idle = self.activity_tracker.is_idle()
@@ -83,6 +95,20 @@ class ProductivityGuardianApp(QtWidgets.QApplication):
         result = self.rule_engine.evaluate(active_seconds, is_idle)
         if result.should_break and not self.overlay.isVisible():
             self.overlay.start()
+
+    def _update_countdown(self) -> None:
+        """Refresh the countdown label in the tray context menu."""
+        if self._monitoring_paused:
+            self._countdown_action.setText("⏸ Monitoring paused")
+            return
+        if self.overlay.isVisible():
+            self._countdown_action.setText("☕ Break in progress…")
+            return
+        active_seconds = self.activity_tracker.get_active_duration()
+        threshold = self.rule_engine.active_threshold_seconds
+        remaining = max(0, threshold - active_seconds)
+        mins, secs = divmod(int(remaining), 60)
+        self._countdown_action.setText(f"⏱ Next break in {mins:02d}:{secs:02d}")
 
     def _on_break_finished(self) -> None:
         self._break_count += 1
