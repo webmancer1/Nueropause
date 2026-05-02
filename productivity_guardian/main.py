@@ -12,6 +12,7 @@ from .config import (
 from .database import Database
 from .engine.rule_engine import RuleEngine
 from .monitor.activity_tracker import ActivityTracker
+from .monitor.sleep_monitor import SleepMonitor
 from .ui.break_overlay import BreakOverlay
 from .ui.settings_dialog import SettingsDialog
 
@@ -36,6 +37,10 @@ class ProductivityGuardianApp(QtWidgets.QApplication):
         self._monitor_timer.timeout.connect(self._monitor_loop)
 
         self.overlay.break_finished.connect(self._on_break_finished)
+
+        # Sleep / suspend detection — resets the work timer on wake
+        self.sleep_monitor = SleepMonitor(self)
+        self.sleep_monitor.system_resumed.connect(self._on_system_resumed)
 
     def start(self) -> None:
         self.activity_tracker.start()
@@ -98,6 +103,22 @@ class ProductivityGuardianApp(QtWidgets.QApplication):
     def _start_break_now(self) -> None:
         if not self.overlay.isVisible():
             self.overlay.start()
+
+    def _on_system_resumed(self) -> None:
+        """Called when the machine wakes from suspend/sleep."""
+        # Dismiss the overlay if it was visible when the lid closed
+        if self.overlay.isVisible():
+            self.overlay._finish()  # stops timers and hides cleanly
+
+        # Reset work-session timer so the user gets a fresh period
+        self.activity_tracker.reset_timer()
+
+        self.tray_icon.showMessage(
+            APP_NAME,
+            "Welcome back! Your work timer has been reset.",
+            QtWidgets.QSystemTrayIcon.MessageIcon.Information,
+            4000,
+        )
 
     def _open_settings(self) -> None:
         current_work = self.rule_engine.active_threshold_seconds // 60
