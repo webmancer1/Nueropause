@@ -18,6 +18,12 @@ WELLNESS_PROMPTS = [
     "Stretch",
     "Drink water",
     "Deep breathing",
+    "Roll your shoulders back",
+    "Close your eyes and relax",
+    "Stand up and walk around",
+    "Do 10 jumping jacks",
+    "Wiggle your fingers and toes",
+    "Smile — you're doing great!",
 ]
 
 # Database — stored in ~/.local/share/productivity-guardian/ so the path is
