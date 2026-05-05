@@ -22,17 +22,17 @@ Neuropause sits quietly in your **system tray** and tracks how long you've been 
 
 | Feature | Details |
 |---|---|
-| ⏱ **Live tray countdown** | The tray menu shows a live `MM:SS` countdown to your next break, updating every second |
-| 🔔 **3-minute pre-break alert** | A system notification fires once when 3 minutes remain — so you're never caught off guard |
-| 🎬 **Animated break overlay** | Full-screen overlay with animated gradient background, floating particles, pulsing progress ring, and smooth fade in/out |
-| 🤸 **Wellness prompts with emoji** | 10 rotating prompts (eye exercises, stretching, hydration, breathing, jumping jacks, and more), each with a unique emoji and accent colour that cross-fade on rotation |
-| 🎯 **Work-period tracking** | Counts elapsed work time; if you step away for an entire work period the timer silently resets so you start fresh on return |
-| ⚙️ **Adjustable timers** | Set your own work period (1–180 min) and break duration (1–60 min) via the tray menu; changes apply immediately |
-| 🖥️ **System tray icon** | Pause monitoring, trigger a break immediately, or open settings — all from the tray |
-| 🌙 **Sleep/suspend aware** | Detects system wake events; resets the work timer and dismisses any in-progress overlay |
-| 💾 **Session logging** | Every break is recorded to a local SQLite database |
-| 📋 **Crash-safe logging** | Logs to `~/.local/share/productivity-guardian/app.log` |
-| 🚀 **Auto-start on login** | Installed as an XDG autostart entry; launches automatically every time you log in |
+|  **Live tray countdown** | The tray menu shows a live `MM:SS` countdown to your next break, updating every second |
+|  **3-minute pre-break alert** | A system notification fires once when 3 minutes remain — so you're never caught off guard |
+|  **Animated break overlay** | Full-screen overlay with animated gradient background, floating particles, pulsing progress ring, and smooth fade in/out |
+|  **Wellness prompts with emoji** | 10 rotating prompts (eye exercises, stretching, hydration, breathing, jumping jacks, and more), each with a unique emoji and accent colour that cross-fade on rotation |
+|  **Work-period tracking** | Counts elapsed work time; if you step away for an entire work period the timer silently resets so you start fresh on return |
+|  **Adjustable timers** | Set your own work period (1–180 min) and break duration (1–60 min) via the tray menu; changes apply immediately |
+|  **System tray icon** | Pause monitoring, trigger a break immediately, or open settings — all from the tray |
+|  **Sleep/suspend aware** | Detects system wake events; resets the work timer and dismisses any in-progress overlay |
+|  **Session logging** | Every break is recorded to a local SQLite database |
+|  **Crash-safe logging** | Logs to `~/.local/share/productivity-guardian/app.log` |
+|  **Auto-start on login** | Installed as an XDG autostart entry; launches automatically every time you log in |
 
 ---
 
@@ -85,14 +85,6 @@ Right-click the tray icon to access:
 | **Settings…** | Opens the timer configuration dialog |
 | **Quit** | Cleanly stops all timers and exits |
 
-### Tray states
-
-| Display | Meaning |
-|---|---|
-| `⏱ Next break in 47:23` | Normal — counting down to next break |
-| `☕ Break in progress…` | Break overlay is currently active |
-| `⏸ Monitoring paused` | Monitoring has been manually paused |
-
 ---
 
 ##  Configuring Timers
@@ -131,27 +123,6 @@ The break screen is fully animated:
 - **Wellness prompt** — each prompt has a matching emoji and unique accent colour; prompts cross-fade when they rotate
 - **Fade in / fade out** — the overlay smoothly fades in on start and fades out when the break ends
 
----
-
-##  Wellness Prompts
-
-The break overlay cycles through these reminders:
-
-| Prompt | Emoji |
-|---|---|
-| Look 20 feet away for 20 seconds | 👀 |
-| Stretch | 🤸 |
-| Drink water | 💧 |
-| Deep breathing | 🌬️ |
-| Roll your shoulders back | 🔄 |
-| Close your eyes and relax | 😌 |
-| Stand up and walk around | 🚶 |
-| Do 10 jumping jacks | 🏃 |
-| Wiggle your fingers and toes | 🖐️ |
-| Smile — you're doing great! | 😊 |
-
-Add your own prompts in `config.py`:
-
 ```python
 WELLNESS_PROMPTS = [
     "Look 20 feet away for 20 seconds",
@@ -183,30 +154,6 @@ tail -f ~/.local/share/productivity-guardian/app.log
 # Run directly (attached to terminal, useful for debugging)
 .venv/bin/python -m productivity_guardian.main
 ```
-
----
-
-##  Dependencies
-
-| Package | Version | Purpose |
-|---|---|---|
-| `PyQt6` | ≥ 6.11 | GUI framework (tray icon, overlay, dialogs, animations) |
-| `pynput` | ≥ 1.8 | Keyboard & mouse event listener |
-| `psutil` | ≥ 7.0 | System utilities (used by sleep monitor) |
-| `python-xlib` | ≥ 0.33 | X11 backend for pynput on Linux |
-| `six` | ≥ 1.17 | Required by python-xlib |
-
----
-
-##  Data Storage
-
-All data is stored **locally** — nothing is sent anywhere.
-
-| File | Location |
-|---|---|
-| Session database | `~/.local/share/productivity-guardian/sessions.db` |
-| Application log | `~/.local/share/productivity-guardian/app.log` |
-
 ---
 
 ##  How the Break Trigger Works
