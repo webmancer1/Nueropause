@@ -30,6 +30,7 @@ class ProductivityGuardianApp(QtWidgets.QApplication):
 
         self._break_count = 0
         self._monitoring_paused = False
+        self._warning_sent = False   # tracks the pre-break 3-min alert
         self._build_tray()
 
         self._monitor_timer = QtCore.QTimer(self)
@@ -91,12 +92,31 @@ class ProductivityGuardianApp(QtWidgets.QApplication):
         if self._monitoring_paused:
             return
 
+        is_idle = self.activity_tracker.is_idle()
         active_seconds = self.activity_tracker.get_active_duration()
+        threshold = self.rule_engine.active_threshold_seconds
+        remaining = max(0, threshold - active_seconds)
 
-        # Trigger the break purely on elapsed work time — don't gate on idle
-        # so the reminder fires even if pynput can't capture global events.
-        if active_seconds >= self.rule_engine.active_threshold_seconds \
-                and not self.overlay.isVisible():
+        # If user has been idle for a full work period they clearly stepped away;
+        # silently reset so they get a fresh session when they return.
+        if is_idle and active_seconds >= threshold:
+            self._reset_warning()
+            self.activity_tracker.reset_timer()
+            return
+
+        # One-shot 3-minute warning notification
+        if not self._warning_sent and 0 < remaining <= 180:
+            self._warning_sent = True
+            self.tray_icon.showMessage(
+                "Break coming up ⏳",
+                f"Your break starts in {int(remaining // 60)} min "
+                f"{int(remaining % 60):02d} sec — wrap up what you're doing!",
+                QtWidgets.QSystemTrayIcon.MessageIcon.Information,
+                8000,
+            )
+
+        # Trigger the break purely on elapsed work time
+        if active_seconds >= threshold and not self.overlay.isVisible():
             self.overlay.start()
 
     def _update_countdown(self) -> None:
@@ -117,7 +137,12 @@ class ProductivityGuardianApp(QtWidgets.QApplication):
         self._break_count += 1
         active_minutes = self.activity_tracker.get_active_duration() // 60
         self.db.log_session(active_minutes=active_minutes, break_count=self._break_count)
+        self._reset_warning()
         self.activity_tracker.reset_timer()
+
+    def _reset_warning(self) -> None:
+        """Clear the pre-break warning flag so it fires again next cycle."""
+        self._warning_sent = False
 
     def _set_monitoring_paused(self, paused: bool) -> None:
         self._monitoring_paused = paused
