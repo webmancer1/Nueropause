@@ -90,10 +90,13 @@ class ProductivityGuardianApp(QtWidgets.QApplication):
         self._update_countdown()
         if self._monitoring_paused:
             return
-        is_idle = self.activity_tracker.is_idle()
+
         active_seconds = self.activity_tracker.get_active_duration()
-        result = self.rule_engine.evaluate(active_seconds, is_idle)
-        if result.should_break and not self.overlay.isVisible():
+
+        # Trigger the break purely on elapsed work time — don't gate on idle
+        # so the reminder fires even if pynput can't capture global events.
+        if active_seconds >= self.rule_engine.active_threshold_seconds \
+                and not self.overlay.isVisible():
             self.overlay.start()
 
     def _update_countdown(self) -> None:
