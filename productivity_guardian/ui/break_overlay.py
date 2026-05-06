@@ -13,9 +13,7 @@ from ..config import (
 )
 from ..engine.wellness_engine import WellnessEngine
 
-# ---------------------------------------------------------------------------
-# Colour palette — deep cosmic gradient palette
-# ---------------------------------------------------------------------------
+
 _GRAD_STOPS: list[tuple[float, QtGui.QColor]] = [
     (0.0,  QtGui.QColor(15,  23,  42)),   # slate-900
     (0.35, QtGui.QColor(30,  27,  75)),   # indigo-950
@@ -28,7 +26,8 @@ _ACCENT2  = QtGui.QColor(167, 139, 250)   # violet-400
 _ACCENT3  = QtGui.QColor(52,  211, 153)   # emerald-400
 _WHITE    = QtGui.QColor(248, 250, 252)   # slate-50
 
-# Fun prompt mapping: text  →  (emoji, accent colour)
+
+
 PROMPT_META: dict[str, tuple[str, QtGui.QColor]] = {
     "Look 20 feet away for 20 seconds": ("👀", QtGui.QColor(56,  189, 248)),
     "Stretch":                           ("🤸", QtGui.QColor(167, 139, 250)),
@@ -44,9 +43,7 @@ PROMPT_META: dict[str, tuple[str, QtGui.QColor]] = {
 _DEFAULT_META = ("✨", _ACCENT)
 
 
-# ---------------------------------------------------------------------------
-# Floating particle
-# ---------------------------------------------------------------------------
+
 @dataclass
 class _Particle:
     x: float
@@ -56,7 +53,7 @@ class _Particle:
     speed_x: float
     color: QtGui.QColor
     alpha: int
-    phase: float          # for gentle sine wobble
+    phase: float          
 
 
 def _random_particle(width: int, height: int) -> _Particle:
@@ -74,15 +71,12 @@ def _random_particle(width: int, height: int) -> _Particle:
     )
 
 
-# ---------------------------------------------------------------------------
-# Break Overlay
-# ---------------------------------------------------------------------------
 class BreakOverlay(QtWidgets.QWidget):
     break_finished = QtCore.pyqtSignal()
 
     _PARTICLE_COUNT = 55
     _RING_WIDTH      = 14
-    _RING_RADIUS     = 130          # px from centre to ring mid-line
+    _RING_RADIUS     = 130          
 
     def __init__(self, duration_seconds: int = BREAK_DURATION_SECONDS) -> None:
         super().__init__()
@@ -90,7 +84,7 @@ class BreakOverlay(QtWidgets.QWidget):
         self.remaining_seconds = duration_seconds
         self.wellness_engine   = WellnessEngine()
 
-        # Current prompt state
+        
         self._current_emoji   = "✨"
         self._current_color   = _ACCENT
         self._current_prompt  = ""
@@ -103,16 +97,16 @@ class BreakOverlay(QtWidgets.QWidget):
         self.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground, True)
 
-        # ---- animation tick (60 fps) ----
-        self._anim_t        = 0.0      # global time counter
-        self._breathe_t     = 0.0     # breathing phase for ring pulse
+       
+        self._anim_t        = 0.0      
+        self._breathe_t     = 0.0     
         self._particles: List[_Particle] = []
 
         self._anim_timer = QtCore.QTimer(self)
-        self._anim_timer.setInterval(16)           # ~60 fps
+        self._anim_timer.setInterval(16)           
         self._anim_timer.timeout.connect(self._anim_tick)
 
-        # ---- countdown / prompt timers ----
+        
         self._countdown_timer = QtCore.QTimer(self)
         self._countdown_timer.setInterval(1000)
         self._countdown_timer.timeout.connect(self._tick)
@@ -121,7 +115,7 @@ class BreakOverlay(QtWidgets.QWidget):
         self._prompt_timer.setInterval(PROMPT_ROTATE_SECONDS * 1000)
         self._prompt_timer.timeout.connect(self._rotate_prompt_animated)
 
-        # ---- fade in/out effect ----
+        
         self._opacity_effect = QtWidgets.QGraphicsOpacityEffect(self)
         self.setGraphicsEffect(self._opacity_effect)
         self._opacity_effect.setOpacity(0.0)
@@ -134,29 +128,27 @@ class BreakOverlay(QtWidgets.QWidget):
 
         self._build_ui()
 
-    # ------------------------------------------------------------------
-    # UI construction
-    # ------------------------------------------------------------------
+    
     def _build_ui(self) -> None:
         root = QtWidgets.QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        # Centre column
+        
         centre = QtWidgets.QWidget()
         centre.setStyleSheet("background: transparent;")
         col = QtWidgets.QVBoxLayout(centre)
         col.setContentsMargins(80, 80, 80, 80)
         col.setSpacing(0)
 
-        # Title
+    
         self._title_label = QtWidgets.QLabel("Time for a break ☕")
         self._title_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         font_title = QtGui.QFont("Sans Serif", 30, QtGui.QFont.Weight.Bold)
         self._title_label.setFont(font_title)
         self._title_label.setStyleSheet("color: #f8fafc; background: transparent; letter-spacing: 1px;")
 
-        # Ring canvas (draws the animated arc + countdown text inside)
+    
         self._ring_canvas = _RingCanvas(
             radius=self._RING_RADIUS,
             ring_width=self._RING_WIDTH,
@@ -167,20 +159,20 @@ class BreakOverlay(QtWidgets.QWidget):
             (self._RING_RADIUS + self._RING_WIDTH + 10) * 2,
         )
 
-        # Emoji label
+        
         self._emoji_label = QtWidgets.QLabel("✨")
         self._emoji_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self._emoji_label.setFont(QtGui.QFont("Sans Serif", 48))
         self._emoji_label.setStyleSheet("background: transparent;")
 
-        # Prompt label (cross-fades)
+        
         self._prompt_label = QtWidgets.QLabel("")
         self._prompt_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self._prompt_label.setFont(QtGui.QFont("Sans Serif", 22, QtGui.QFont.Weight.Medium))
         self._prompt_label.setWordWrap(True)
         self._prompt_label.setStyleSheet(f"color: {_ACCENT.name()}; background: transparent;")
 
-        # Prompt opacity effect for cross-fade
+        
         self._prompt_opacity = QtWidgets.QGraphicsOpacityEffect(self._prompt_label)
         self._prompt_label.setGraphicsEffect(self._prompt_opacity)
 
@@ -191,7 +183,7 @@ class BreakOverlay(QtWidgets.QWidget):
         self._pending_prompt: tuple[str, str, QtGui.QColor] | None = None
         self._fading_prompt_out = False
 
-        # Subtitle
+
         sub = QtWidgets.QLabel("Step away · Recharge · Come back refreshed")
         sub.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         sub.setFont(QtGui.QFont("Sans Serif", 13))
@@ -212,15 +204,13 @@ class BreakOverlay(QtWidgets.QWidget):
         root.addWidget(centre)
         self.setLayout(root)
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
+ 
     def start(self) -> None:
-        # --- Hard-reset all state before each new break ---
+        
         self.remaining_seconds  = self.duration_seconds
         self._fading_out        = False
 
-        # Kill any running animations and reset prompt cross-fade state
+        
         self._fade_anim.stop()
         self._prompt_fade.stop()
         self._fading_prompt_out = False
@@ -233,7 +223,7 @@ class BreakOverlay(QtWidgets.QWidget):
             geo = screen.geometry()
             self.setGeometry(geo)
 
-        # Seed particles
+        
         self._particles = [
             _random_particle(self.width() or 1920, self.height() or 1080)
             for _ in range(self._PARTICLE_COUNT)
@@ -245,7 +235,7 @@ class BreakOverlay(QtWidgets.QWidget):
         self.raise_()
         self.activateWindow()
 
-        # Fade the overlay in, then show the first prompt once visible
+    
         self._fade_anim.setStartValue(0.0)
         self._fade_anim.setEndValue(1.0)
         self._fade_anim.start()
@@ -254,22 +244,20 @@ class BreakOverlay(QtWidgets.QWidget):
         self._countdown_timer.start()
         self._prompt_timer.start()
 
-        # Show first prompt immediately (no stale fade state)
+        
         self._show_next_prompt()
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
-        event.ignore()   # prevent accidental closure during break
+        event.ignore()   
 
-    # ------------------------------------------------------------------
-    # Paint — background gradient + particles
-    # ------------------------------------------------------------------
-    def paintEvent(self, _: QtGui.QPaintEvent) -> None:  # type: ignore[override]
+    
+    def paintEvent(self, _: QtGui.QPaintEvent) -> None:  
         p = QtGui.QPainter(self)
         p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
 
         w, h = self.width(), self.height()
 
-        # Animated diagonal gradient — hue slowly drifts
+        
         angle_rad = math.radians(135 + 20 * math.sin(self._anim_t * 0.3))
         cos_a, sin_a = math.cos(angle_rad), math.sin(angle_rad)
         cx, cy = w / 2, h / 2
@@ -280,7 +268,7 @@ class BreakOverlay(QtWidgets.QWidget):
         y2 = cy + sin_a * length
 
         grad = QtGui.QLinearGradient(x1, y1, x2, y2)
-        # Shift stop colours slightly over time
+        
         drift = (math.sin(self._anim_t * 0.15) + 1) / 2  # 0..1
         for pos, base_col in _GRAD_STOPS:
             h_hue   = (base_col.hsvHue()   + int(drift * 20)) % 360
@@ -291,7 +279,7 @@ class BreakOverlay(QtWidgets.QWidget):
 
         p.fillRect(0, 0, w, h, grad)
 
-        # Particles
+        
         for part in self._particles:
             wobble_x = part.x + 6 * math.sin(self._anim_t * 0.8 + part.phase)
             c = QtGui.QColor(part.color)
@@ -303,16 +291,14 @@ class BreakOverlay(QtWidgets.QWidget):
 
         p.end()
 
-    # ------------------------------------------------------------------
-    # Animation tick
-    # ------------------------------------------------------------------
+   
     def _anim_tick(self) -> None:
-        self._anim_t    += 0.016          # seconds elapsed
+        self._anim_t    += 0.016          
         self._breathe_t += 0.016
 
         w, h = self.width() or 1920, self.height() or 1080
 
-        # Move particles upward; wrap around
+        
         for part in self._particles:
             part.y += part.speed_y
             part.x += part.speed_x
@@ -320,19 +306,17 @@ class BreakOverlay(QtWidgets.QWidget):
                 part.y = h + part.radius
                 part.x = random.uniform(0, w)
 
-        # Pulse ring accent colour
+        
         pulse = (math.sin(self._breathe_t * 2.5) + 1) / 2  # 0..1
         r = int(_ACCENT.red()   + pulse * (_ACCENT2.red()   - _ACCENT.red()))
         g = int(_ACCENT.green() + pulse * (_ACCENT2.green() - _ACCENT.green()))
         b = int(_ACCENT.blue()  + pulse * (_ACCENT2.blue()  - _ACCENT.blue()))
         self._ring_canvas.set_ring_color(QtGui.QColor(r, g, b))
 
-        self.update()           # triggers paintEvent
+        self.update()           
         self._ring_canvas.update()
 
-    # ------------------------------------------------------------------
-    # Countdown
-    # ------------------------------------------------------------------
+
     def _tick(self) -> None:
         self.remaining_seconds -= 1
         if self.remaining_seconds <= 0:
@@ -344,9 +328,7 @@ class BreakOverlay(QtWidgets.QWidget):
         fraction = self.remaining_seconds / max(1, self.duration_seconds)
         self._ring_canvas.set_progress(fraction, self._format_time(self.remaining_seconds))
 
-    # ------------------------------------------------------------------
-    # Prompt rotation with cross-fade
-    # ------------------------------------------------------------------
+    
     def _show_next_prompt(self) -> None:
         """Load the next prompt and fade it in from scratch (no fade-out step)."""
         state = self.wellness_engine.next_prompt()
@@ -374,7 +356,7 @@ class BreakOverlay(QtWidgets.QWidget):
         emoji, color = PROMPT_META.get(state.prompt, _DEFAULT_META)
         self._pending_prompt = (state.prompt, emoji, color)
 
-        # Fade out, then in _on_prompt_fade_step swap text and fade back in
+    
         self._fading_prompt_out = True
         self._prompt_fade.stop()
         self._prompt_fade.setStartValue(self._prompt_opacity.opacity())
@@ -383,7 +365,7 @@ class BreakOverlay(QtWidgets.QWidget):
 
     def _on_prompt_fade_step(self) -> None:
         if not self._fading_prompt_out or self._pending_prompt is None:
-            return   # ignore spurious finish signals (e.g. fade-in completed)
+            return   
 
         text, emoji, color = self._pending_prompt
         self._pending_prompt = None
@@ -397,16 +379,14 @@ class BreakOverlay(QtWidgets.QWidget):
         )
         self._emoji_label.setText(emoji)
 
-        # Fade back in
+        
         self._fading_prompt_out = False
         self._prompt_fade.stop()
         self._prompt_fade.setStartValue(0.0)
         self._prompt_fade.setEndValue(1.0)
         self._prompt_fade.start()
 
-    # ------------------------------------------------------------------
-    # Finish / fade out
-    # ------------------------------------------------------------------
+   
     def _finish(self) -> None:
         self._countdown_timer.stop()
         self._prompt_timer.stop()
@@ -420,14 +400,12 @@ class BreakOverlay(QtWidgets.QWidget):
 
     def _on_fade_finished(self) -> None:
         if self._fading_out:
-            self._fading_out = False          # clear BEFORE hide/emit to avoid re-entry
+            self._fading_out = False          
             self.hide()
-            self._opacity_effect.setOpacity(0.0)  # ready for next fade-in
+            self._opacity_effect.setOpacity(0.0)  
             self.break_finished.emit()
 
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
+    
     @staticmethod
     def _format_time(seconds: int) -> str:
         m = seconds // 60
@@ -435,15 +413,13 @@ class BreakOverlay(QtWidgets.QWidget):
         return f"{m:02d}:{s:02d}"
 
 
-# ---------------------------------------------------------------------------
-# Ring canvas widget — draws an arc progress ring + countdown text
-# ---------------------------------------------------------------------------
+
 class _RingCanvas(QtWidgets.QWidget):
     def __init__(self, radius: int, ring_width: int, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self._radius     = radius
         self._ring_width = ring_width
-        self._progress   = 1.0          # 1.0 = full, 0.0 = empty
+        self._progress   = 1.0          
         self._text       = "00:00"
         self._ring_color = _ACCENT
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents)
@@ -457,7 +433,7 @@ class _RingCanvas(QtWidgets.QWidget):
     def set_ring_color(self, color: QtGui.QColor) -> None:
         self._ring_color = color
 
-    def paintEvent(self, _: QtGui.QPaintEvent) -> None:  # type: ignore[override]
+    def paintEvent(self, _: QtGui.QPaintEvent) -> None:  
         p = QtGui.QPainter(self)
         p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
 
@@ -465,7 +441,7 @@ class _RingCanvas(QtWidgets.QWidget):
         cy = self.height() / 2
         r  = self._radius
 
-        # Track ring (dimmed)
+       
         track_color = QtGui.QColor(255, 255, 255, 25)
         pen_track = QtGui.QPen(track_color, self._ring_width, QtCore.Qt.PenStyle.SolidLine,
                                QtCore.Qt.PenCapStyle.RoundCap)
@@ -474,16 +450,16 @@ class _RingCanvas(QtWidgets.QWidget):
         rect = QtCore.QRectF(cx - r, cy - r, r * 2, r * 2)
         p.drawEllipse(rect)
 
-        # Progress arc — starts at top (270°), sweeps clockwise
-        span = int(self._progress * 360 * 16)    # Qt uses 1/16 degree units
+       
+        span = int(self._progress * 360 * 16)    
         if span > 0:
             pen_arc = QtGui.QPen(self._ring_color, self._ring_width,
                                  QtCore.Qt.PenStyle.SolidLine,
                                  QtCore.Qt.PenCapStyle.RoundCap)
             p.setPen(pen_arc)
-            p.drawArc(rect, 90 * 16, -span)      # 90° = top, negative = clockwise
+            p.drawArc(rect, 90 * 16, -span)      
 
-        # Glow halo on the arc tip
+        
         if self._progress > 0.01:
             tip_angle_deg = 90 - self._progress * 360
             tip_rad = math.radians(tip_angle_deg)
@@ -499,7 +475,7 @@ class _RingCanvas(QtWidgets.QWidget):
             hw = self._ring_width * 1.8
             p.drawEllipse(QtCore.QPointF(tip_x, tip_y), hw, hw)
 
-        # Countdown text in centre
+    
         p.setPen(QtGui.QPen(_WHITE))
         font = QtGui.QFont("Sans Serif", 36, QtGui.QFont.Weight.Bold)
         p.setFont(font)
