@@ -37,8 +37,7 @@ PROMPT_META: dict[str, tuple[str, QtGui.QColor]] = {
     "Close your eyes and relax":         ("😌", QtGui.QColor(196, 181, 253)),
     "Stand up and walk around":          ("🚶", QtGui.QColor(110, 231, 183)),
     "Do 10 jumping jacks":               ("🏃", QtGui.QColor(253, 186,  64)),
-    "Wiggle your fingers and toes":      ("🖐️", QtGui.QColor(129, 140, 248)),
-    "Smile — you're doing great!":       ("😊", QtGui.QColor(251, 207,  52)),
+    
 }
 _DEFAULT_META = ("✨", _ACCENT)
 
