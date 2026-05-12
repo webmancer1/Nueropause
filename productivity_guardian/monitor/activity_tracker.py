@@ -13,6 +13,7 @@ class ActivityTracker:
         self._lock = threading.Lock()
         self._last_input_ts = time.monotonic()
         self._session_start_ts = time.monotonic()
+    def _create_listeners(self) -> None:
         self._keyboard_listener = keyboard.Listener(
             on_press=self._on_input,
             on_release=self._on_input,
@@ -24,8 +25,9 @@ class ActivityTracker:
         )
 
     def start(self) -> None:
-        self._keyboard_listener.start()
-        self._mouse_listener.start()
+        if not hasattr(self, '_keyboard_listener'):
+            self._create_listeners()
+        self._ensure_listeners()
 
     def stop(self) -> None:
         self._keyboard_listener.stop()
@@ -35,7 +37,16 @@ class ActivityTracker:
         with self._lock:
             self._last_input_ts = time.monotonic()
 
+    def _ensure_listeners(self) -> None:
+        if hasattr(self, '_keyboard_listener') and not self._keyboard_listener.is_alive():
+            self._keyboard_listener = keyboard.Listener(on_press=self._on_input, on_release=self._on_input)
+            self._keyboard_listener.start()
+        if hasattr(self, '_mouse_listener') and not self._mouse_listener.is_alive():
+            self._mouse_listener = mouse.Listener(on_move=self._on_input, on_click=self._on_input, on_scroll=self._on_input)
+            self._mouse_listener.start()
+
     def is_idle(self) -> bool:
+        self._ensure_listeners()
         with self._lock:
             idle_seconds = time.monotonic() - self._last_input_ts
         return idle_seconds >= self.idle_threshold_seconds
