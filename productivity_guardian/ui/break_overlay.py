@@ -115,11 +115,9 @@ class BreakOverlay(QtWidgets.QWidget):
         self._prompt_timer.timeout.connect(self._rotate_prompt_animated)
 
         
-        self._opacity_effect = QtWidgets.QGraphicsOpacityEffect(self)
-        self.setGraphicsEffect(self._opacity_effect)
-        self._opacity_effect.setOpacity(0.0)
+        self.setWindowOpacity(0.0)
 
-        self._fade_anim = QtCore.QPropertyAnimation(self._opacity_effect, b"opacity", self)
+        self._fade_anim = QtCore.QPropertyAnimation(self, b"windowOpacity", self)
         self._fade_anim.setDuration(600)
         self._fade_anim.setEasingCurve(QtCore.QEasingCurve.Type.InOutCubic)
         self._fade_anim.finished.connect(self._on_fade_finished)
@@ -215,7 +213,7 @@ class BreakOverlay(QtWidgets.QWidget):
         self._fading_prompt_out = False
         self._pending_prompt    = None
         self._prompt_opacity.setOpacity(0.0)
-        self._opacity_effect.setOpacity(0.0)
+        self.setWindowOpacity(0.0)
 
         screen = QtWidgets.QApplication.primaryScreen()
         if screen:
@@ -401,7 +399,7 @@ class BreakOverlay(QtWidgets.QWidget):
         if self._fading_out:
             self._fading_out = False          
             self.hide()
-            self._opacity_effect.setOpacity(0.0)  
+            self.setWindowOpacity(0.0)  
             self.break_finished.emit()
 
     
