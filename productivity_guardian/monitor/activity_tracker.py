@@ -45,10 +45,37 @@ class ActivityTracker:
             self._mouse_listener = mouse.Listener(on_move=self._on_input, on_click=self._on_input, on_scroll=self._on_input)
             self._mouse_listener.start()
 
+    def _get_dbus_idle_seconds(self) -> float | None:
+        try:
+            from PyQt6.QtDBus import QDBusConnection, QDBusMessage
+            bus = QDBusConnection.sessionBus()
+            msg = QDBusMessage.createMethodCall(
+                'org.gnome.Mutter.IdleMonitor',
+                '/org/gnome/Mutter/IdleMonitor/Core',
+                'org.gnome.Mutter.IdleMonitor',
+                'GetIdletime'
+            )
+            reply = bus.call(msg)
+            args = reply.arguments()
+            if args:
+                return float(args[0]) / 1000.0
+        except Exception:
+            pass
+        return None
+
     def is_idle(self) -> bool:
         self._ensure_listeners()
+        
+        dbus_idle = self._get_dbus_idle_seconds()
+        
         with self._lock:
-            idle_seconds = time.monotonic() - self._last_input_ts
+            pynput_idle = time.monotonic() - self._last_input_ts
+            
+        if dbus_idle is not None:
+            idle_seconds = min(pynput_idle, dbus_idle)
+        else:
+            idle_seconds = pynput_idle
+            
         return idle_seconds >= self.idle_threshold_seconds
 
     def get_active_duration(self) -> int:
