@@ -115,23 +115,37 @@ class BreakOverlay(QtWidgets.QWidget):
         self._prompt_timer.timeout.connect(self._rotate_prompt_animated)
 
         
-        self.setWindowOpacity(0.0)
-
-        self._fade_anim = QtCore.QPropertyAnimation(self, b"windowOpacity", self)
+        self._fade_alpha = 0.0
+        self._fade_anim = QtCore.QVariantAnimation(self)
         self._fade_anim.setDuration(600)
         self._fade_anim.setEasingCurve(QtCore.QEasingCurve.Type.InOutCubic)
+        self._fade_anim.valueChanged.connect(self._on_fade_value_changed)
         self._fade_anim.finished.connect(self._on_fade_finished)
         self._fading_out = False
 
         self._build_ui()
 
-    
+    def _on_fade_value_changed(self, value: float) -> None:
+        self._fade_alpha = value
+        if hasattr(self, '_container_opacity'):
+            self._container_opacity.setOpacity(value)
+        self.update()
+
     def _build_ui(self) -> None:
         root = QtWidgets.QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        
+        self._container = QtWidgets.QWidget()
+        self._container_opacity = QtWidgets.QGraphicsOpacityEffect(self._container)
+        self._container.setGraphicsEffect(self._container_opacity)
+        self._container_opacity.setOpacity(0.0)
+        root.addWidget(self._container)
+
+        container_layout = QtWidgets.QVBoxLayout(self._container)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+        container_layout.setSpacing(0)
+
         centre = QtWidgets.QWidget()
         centre.setStyleSheet("background: transparent;")
         col = QtWidgets.QVBoxLayout(centre)
@@ -198,7 +212,7 @@ class BreakOverlay(QtWidgets.QWidget):
         col.addWidget(sub)
         col.addStretch(3)
 
-        root.addWidget(centre)
+        container_layout.addWidget(centre)
         self.setLayout(root)
 
  
@@ -213,7 +227,9 @@ class BreakOverlay(QtWidgets.QWidget):
         self._fading_prompt_out = False
         self._pending_prompt    = None
         self._prompt_opacity.setOpacity(0.0)
-        self.setWindowOpacity(0.0)
+        self._fade_alpha = 0.0
+        if hasattr(self, '_container_opacity'):
+            self._container_opacity.setOpacity(0.0)
 
         screen = QtWidgets.QApplication.primaryScreen()
         if screen:
@@ -272,6 +288,7 @@ class BreakOverlay(QtWidgets.QWidget):
             h_sat   = base_col.hsvSaturation()
             h_val   = base_col.value()
             shifted = QtGui.QColor.fromHsv(h_hue, h_sat, h_val)
+            shifted.setAlphaF(self._fade_alpha)
             grad.setColorAt(pos, shifted)
 
         p.fillRect(0, 0, w, h, grad)
@@ -280,7 +297,7 @@ class BreakOverlay(QtWidgets.QWidget):
         for part in self._particles:
             wobble_x = part.x + 6 * math.sin(self._anim_t * 0.8 + part.phase)
             c = QtGui.QColor(part.color)
-            c.setAlpha(part.alpha)
+            c.setAlpha(int(part.alpha * self._fade_alpha))
             p.setBrush(QtGui.QBrush(c))
             p.setPen(QtCore.Qt.PenStyle.NoPen)
             r = part.radius * (0.9 + 0.1 * math.sin(self._anim_t * 1.2 + part.phase))
@@ -399,7 +416,9 @@ class BreakOverlay(QtWidgets.QWidget):
         if self._fading_out:
             self._fading_out = False          
             self.hide()
-            self.setWindowOpacity(0.0)  
+            self._fade_alpha = 0.0
+            if hasattr(self, '_container_opacity'):
+                self._container_opacity.setOpacity(0.0)  
             self.break_finished.emit()
 
     
