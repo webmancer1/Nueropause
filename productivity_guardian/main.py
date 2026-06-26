@@ -23,10 +23,15 @@ class ProductivityGuardianApp(QtWidgets.QApplication):
         self.setApplicationName(APP_NAME)
         self.setQuitOnLastWindowClosed(False)
 
+        self.settings = QtCore.QSettings("Neuropause", "ProductivityGuardian")
+        work_secs = self.settings.value("work_period_seconds", ACTIVE_SESSION_THRESHOLD_SECONDS, type=int)
+        break_secs = self.settings.value("break_duration_seconds", BREAK_DURATION_SECONDS, type=int)
+
         self.db = Database()
         self.activity_tracker = ActivityTracker()
         self.rule_engine = RuleEngine()
-        self.overlay = BreakOverlay(duration_seconds=BREAK_DURATION_SECONDS)
+        self.rule_engine.active_threshold_seconds = work_secs
+        self.overlay = BreakOverlay(duration_seconds=break_secs)
 
         self._break_count = 0
         self._monitoring_paused = False
@@ -186,6 +191,8 @@ class ProductivityGuardianApp(QtWidgets.QApplication):
             new_break_secs = dialog.break_duration_minutes * 60
             self.rule_engine.active_threshold_seconds = new_work_secs
             self.overlay.duration_seconds = new_break_secs
+            self.settings.setValue("work_period_seconds", new_work_secs)
+            self.settings.setValue("break_duration_seconds", new_break_secs)
             self.tray_icon.showMessage(
                 APP_NAME,
                 f"Work period: {dialog.work_period_minutes} min  •  "
