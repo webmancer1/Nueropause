@@ -25,6 +25,7 @@ Neuropause sits quietly in your **system tray** and tracks how long you've been 
 |  **Live tray countdown** | The tray menu shows a live `MM:SS` countdown to your next break, updating every second |
 |  **3-minute pre-break alert** | A system notification fires once when 3 minutes remain — so you're never caught off guard |
 |  **Animated break overlay** | Full-screen overlay with animated gradient background, floating particles, pulsing progress ring, and smooth fade in/out |
+|  **Skippable breaks** | Instantly dismiss an ongoing break by pressing the `Esc` key or clicking the skip button |
 |  **Wellness prompts with emoji** | 10 rotating prompts (eye exercises, stretching, hydration, breathing, jumping jacks, and more), each with a unique emoji and accent colour that cross-fade on rotation |
 |  **Work-period tracking** | Counts elapsed work time; if you step away for an entire work period the timer silently resets so you start fresh on return |
 |  **Adjustable timers** | Set your own work period (1–180 min) and break duration (1–60 min) via the tray menu; changes apply immediately |
@@ -122,6 +123,7 @@ The break screen is fully animated:
 - **Progress ring** — an arc around the countdown timer that shrinks clockwise as time runs out, with a glowing tip and a colour that pulses between sky-blue and violet
 - **Wellness prompt** — each prompt has a matching emoji and unique accent colour; prompts cross-fade when they rotate
 - **Fade in / fade out** — the overlay smoothly fades in on start and fades out when the break ends
+- **Skip Break** — easily skip or cancel an ongoing break overlay with a button or by pressing the `Esc` key
 
 ```python
 WELLNESS_PROMPTS = [
