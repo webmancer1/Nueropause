@@ -200,6 +200,26 @@ class BreakOverlay(QtWidgets.QWidget):
         sub.setFont(QtGui.QFont("Sans Serif", 13))
         sub.setStyleSheet("color: rgba(148,163,184,200); background: transparent; letter-spacing: 0.5px;")
 
+        self._skip_button = QtWidgets.QPushButton("Skip break (Esc)")
+        self._skip_button.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
+        self._skip_button.setStyleSheet("""
+            QPushButton {
+                background-color: rgba(255, 255, 255, 10);
+                color: rgba(255, 255, 255, 150);
+                border: 1px solid rgba(255, 255, 255, 30);
+                border-radius: 18px;
+                padding: 10px 24px;
+                font-family: 'Sans Serif';
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 30);
+                color: #ffffff;
+                border: 1px solid rgba(255, 255, 255, 80);
+            }
+        """)
+        self._skip_button.clicked.connect(self._skip_break)
+
         col.addStretch(2)
         col.addWidget(self._title_label)
         col.addSpacing(30)
@@ -210,6 +230,8 @@ class BreakOverlay(QtWidgets.QWidget):
         col.addWidget(self._prompt_label)
         col.addSpacing(20)
         col.addWidget(sub)
+        col.addSpacing(40)
+        col.addWidget(self._skip_button, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
         col.addStretch(3)
 
         container_layout.addWidget(centre)
@@ -262,6 +284,17 @@ class BreakOverlay(QtWidgets.QWidget):
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         event.ignore()   
+
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        if event.key() == QtCore.Qt.Key.Key_Escape:
+            self._skip_break()
+        else:
+            super().keyPressEvent(event)
+
+    def _skip_break(self) -> None:
+        if not self._fading_out:
+            self.remaining_seconds = 0
+            self._finish()
 
     
     def paintEvent(self, _: QtGui.QPaintEvent) -> None:  
