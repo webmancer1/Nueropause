@@ -58,14 +58,26 @@ class _Particle:
 def _random_particle(width: int, height: int) -> _Particle:
     colors = [_ACCENT, _ACCENT2, _ACCENT3]
     c = QtGui.QColor(random.choice(colors))
+    
+    if random.random() < 0.15:
+        # Fast, bright darting particles
+        speed_y = random.uniform(-1.5, -0.8)
+        radius = random.uniform(1.5, 3.5)
+        alpha = random.randint(150, 220)
+    else:
+        # Slow, floating orbs
+        speed_y = random.uniform(-0.5, -0.15)
+        radius = random.uniform(3, 10)
+        alpha = random.randint(30, 100)
+
     return _Particle(
         x=random.uniform(0, width),
         y=random.uniform(0, height),
-        radius=random.uniform(3, 9),
-        speed_y=random.uniform(-0.4, -0.15),
-        speed_x=random.uniform(-0.1, 0.1),
+        radius=radius,
+        speed_y=speed_y,
+        speed_x=random.uniform(-0.2, 0.2),
         color=c,
-        alpha=random.randint(40, 130),
+        alpha=alpha,
         phase=random.uniform(0, 2 * math.pi),
     )
 
@@ -166,8 +178,8 @@ class BreakOverlay(QtWidgets.QWidget):
             parent=self,
         )
         self._ring_canvas.setFixedSize(
-            (self._RING_RADIUS + self._RING_WIDTH + 10) * 2,
-            (self._RING_RADIUS + self._RING_WIDTH + 10) * 2,
+            (self._RING_RADIUS + self._RING_WIDTH + 40) * 2,
+            (self._RING_RADIUS + self._RING_WIDTH + 40) * 2,
         )
 
         
@@ -219,6 +231,12 @@ class BreakOverlay(QtWidgets.QWidget):
             }
         """)
         self._skip_button.clicked.connect(self._skip_break)
+
+        self._skip_shadow = QtWidgets.QGraphicsDropShadowEffect(self._skip_button)
+        self._skip_shadow.setBlurRadius(15)
+        self._skip_shadow.setColor(QtGui.QColor(255, 255, 255, 40))
+        self._skip_shadow.setOffset(0, 0)
+        self._skip_button.setGraphicsEffect(self._skip_shadow)
 
         col.addStretch(2)
         col.addWidget(self._title_label)
@@ -317,7 +335,7 @@ class BreakOverlay(QtWidgets.QWidget):
         
         drift = (math.sin(self._anim_t * 0.15) + 1) / 2  # 0..1
         for pos, base_col in _GRAD_STOPS:
-            h_hue   = (base_col.hsvHue()   + int(drift * 20)) % 360
+            h_hue   = (base_col.hsvHue()   + int(drift * 30)) % 360
             h_sat   = base_col.hsvSaturation()
             h_val   = base_col.value()
             shifted = QtGui.QColor.fromHsv(h_hue, h_sat, h_val)
@@ -328,12 +346,21 @@ class BreakOverlay(QtWidgets.QWidget):
 
         
         for part in self._particles:
-            wobble_x = part.x + 6 * math.sin(self._anim_t * 0.8 + part.phase)
+            wobble_x = part.x + 10 * math.sin(self._anim_t * 0.8 + part.phase)
             c = QtGui.QColor(part.color)
             c.setAlpha(int(part.alpha * self._fade_alpha))
-            p.setBrush(QtGui.QBrush(c))
+            
+            r = part.radius * (0.8 + 0.3 * math.sin(self._anim_t * 2.0 + part.phase))
+            
+            # Glow effect for particles
+            p_grad = QtGui.QRadialGradient(wobble_x, part.y, r)
+            p_grad.setColorAt(0.0, c)
+            c_trans = QtGui.QColor(c)
+            c_trans.setAlpha(0)
+            p_grad.setColorAt(1.0, c_trans)
+            
+            p.setBrush(QtGui.QBrush(p_grad))
             p.setPen(QtCore.Qt.PenStyle.NoPen)
-            r = part.radius * (0.9 + 0.1 * math.sin(self._anim_t * 1.2 + part.phase))
             p.drawEllipse(QtCore.QPointF(wobble_x, part.y), r, r)
 
         p.end()
@@ -359,6 +386,11 @@ class BreakOverlay(QtWidgets.QWidget):
         g = int(_ACCENT.green() + pulse * (_ACCENT2.green() - _ACCENT.green()))
         b = int(_ACCENT.blue()  + pulse * (_ACCENT2.blue()  - _ACCENT.blue()))
         self._ring_canvas.set_ring_color(QtGui.QColor(r, g, b))
+        
+        # Animate skip button shadow
+        if hasattr(self, '_skip_shadow'):
+            shadow_blur = 15 + 10 * math.sin(self._breathe_t * 3.0)
+            self._skip_shadow.setBlurRadius(max(0.0, shadow_blur))
 
         self.update()           
         self._ring_canvas.update()
@@ -488,47 +520,126 @@ class _RingCanvas(QtWidgets.QWidget):
 
         cx = self.width()  / 2
         cy = self.height() / 2
-        r  = self._radius
+        
+        # Breathe the ring radius slightly
+        breathe = 0.0
+        if hasattr(self.parent(), '_breathe_t'):
+            breathe = self.parent()._breathe_t
+            
+        r  = self._radius + 2.5 * math.sin(breathe * 2.0)
 
-       
-        track_color = QtGui.QColor(255, 255, 255, 25)
+        # 1. Pulsating Aura Behind the ring
+        aura_radius = r + self._ring_width + 5 + 8 * math.sin(breathe * 3.0)
+        if aura_radius > 0:
+            aura_grad = QtGui.QRadialGradient(cx, cy, aura_radius)
+            aura_c = QtGui.QColor(self._ring_color)
+            aura_c.setAlpha(int(20 + 15 * math.sin(breathe * 1.5)))
+            aura_grad.setColorAt(0.7, aura_c)
+            aura_c.setAlpha(0)
+            aura_grad.setColorAt(1.0, aura_c)
+            
+            p.setBrush(QtGui.QBrush(aura_grad))
+            p.setPen(QtCore.Qt.PenStyle.NoPen)
+            p.drawEllipse(QtCore.QPointF(cx, cy), aura_radius, aura_radius)
+
+        # 2. Central Glow Behind Text
+        bg_grad = QtGui.QRadialGradient(cx, cy, r)
+        bg_c = QtGui.QColor(self._ring_color)
+        bg_c.setAlpha(30)
+        bg_grad.setColorAt(0.0, bg_c)
+        bg_c.setAlpha(0)
+        bg_grad.setColorAt(1.0, bg_c)
+        p.setBrush(QtGui.QBrush(bg_grad))
+        p.setPen(QtCore.Qt.PenStyle.NoPen)
+        p.drawEllipse(QtCore.QPointF(cx, cy), r, r)
+
+        # 3. Inner Dashed Dial (Watch-face style)
+        inner_r = r - self._ring_width - 12
+        if inner_r > 0:
+            dial_color = QtGui.QColor(255, 255, 255, 40)
+            dial_pen = QtGui.QPen(dial_color, 2)
+            dial_pen.setDashPattern([2, 6])
+            p.setPen(dial_pen)
+            p.setBrush(QtCore.Qt.BrushStyle.NoBrush)
+            p.drawEllipse(QtCore.QPointF(cx, cy), inner_r, inner_r)
+        
+        # 4. Outer Dashed Dial
+        outer_r = r + self._ring_width + 8
+        if outer_r > 0:
+            dial_color = QtGui.QColor(self._ring_color.red(), self._ring_color.green(), self._ring_color.blue(), 50)
+            dial_pen = QtGui.QPen(dial_color, 1.5)
+            dial_pen.setDashPattern([1, 4])
+            p.setPen(dial_pen)
+            p.drawEllipse(QtCore.QPointF(cx, cy), outer_r, outer_r)
+
+        # 5. Track Groove
+        track_color = QtGui.QColor(0, 0, 0, 60)
         pen_track = QtGui.QPen(track_color, self._ring_width, QtCore.Qt.PenStyle.SolidLine,
                                QtCore.Qt.PenCapStyle.RoundCap)
         p.setPen(pen_track)
         p.setBrush(QtCore.Qt.BrushStyle.NoBrush)
         rect = QtCore.QRectF(cx - r, cy - r, r * 2, r * 2)
         p.drawEllipse(rect)
+        
+        # Inner Track highlight (glassy effect)
+        track_hl = QtGui.QColor(255, 255, 255, 10)
+        pen_hl = QtGui.QPen(track_hl, self._ring_width - 4, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap)
+        p.setPen(pen_hl)
+        p.drawEllipse(rect)
 
-       
+        # 6. Progress Arc with Conical Gradient (Comet tail effect)
         span = int(self._progress * 360 * 16)    
         if span > 0:
-            pen_arc = QtGui.QPen(self._ring_color, self._ring_width,
+            tip_angle_deg = 90 - self._progress * 360
+            conic = QtGui.QConicalGradient(cx, cy, tip_angle_deg)
+            c_head = QtGui.QColor(self._ring_color)
+            c_tail = QtGui.QColor(self._ring_color)
+            c_tail.setAlpha(20) # Fade out to tail
+            
+            conic.setColorAt(0.0, c_head)
+            if self._progress > 0.01:
+                conic.setColorAt(self._progress, c_tail)
+                conic.setColorAt(min(1.0, self._progress + 0.001), QtGui.QColor(0,0,0,0))
+            
+            pen_arc = QtGui.QPen(QtGui.QBrush(conic), self._ring_width,
                                  QtCore.Qt.PenStyle.SolidLine,
                                  QtCore.Qt.PenCapStyle.RoundCap)
             p.setPen(pen_arc)
             p.drawArc(rect, 90 * 16, -span)      
 
-        
+        # 7. Leading Orb at the tip
         if self._progress > 0.01:
-            tip_angle_deg = 90 - self._progress * 360
             tip_rad = math.radians(tip_angle_deg)
             tip_x = cx + r * math.cos(tip_rad)
             tip_y = cy - r * math.sin(tip_rad)
-            glow = QtGui.QRadialGradient(tip_x, tip_y, self._ring_width * 1.8)
+            
+            # Glow
+            glow = QtGui.QRadialGradient(tip_x, tip_y, self._ring_width * 2.0)
             glow_col = QtGui.QColor(self._ring_color)
-            glow_col.setAlpha(180)
+            glow_col.setAlpha(200)
             glow.setColorAt(0.0, glow_col)
             glow.setColorAt(1.0, QtGui.QColor(0, 0, 0, 0))
             p.setPen(QtCore.Qt.PenStyle.NoPen)
             p.setBrush(QtGui.QBrush(glow))
-            hw = self._ring_width * 1.8
+            hw = self._ring_width * 2.0
             p.drawEllipse(QtCore.QPointF(tip_x, tip_y), hw, hw)
+            
+            # Bright Core
+            p.setBrush(QtGui.QBrush(QtGui.QColor(255, 255, 255)))
+            p.drawEllipse(QtCore.QPointF(tip_x, tip_y), self._ring_width * 0.25, self._ring_width * 0.25)
 
-    
-        p.setPen(QtGui.QPen(_WHITE))
+        # 8. Text with Drop Shadow
+        p.setPen(QtGui.QPen(QtGui.QColor(0, 0, 0, 150)))
         font = QtGui.QFont("Sans Serif", 36, QtGui.QFont.Weight.Bold)
         p.setFont(font)
-        p.drawText(QtCore.QRectF(cx - r, cy - r, r * 2, r * 2),
-                   QtCore.Qt.AlignmentFlag.AlignCenter, self._text)
+        text_rect = QtCore.QRectF(cx - r, cy - r, r * 2, r * 2)
+        
+        # Draw shadow
+        shadow_rect = text_rect.translated(2, 2)
+        p.drawText(shadow_rect, QtCore.Qt.AlignmentFlag.AlignCenter, self._text)
+        
+        # Draw text
+        p.setPen(QtGui.QPen(_WHITE))
+        p.drawText(text_rect, QtCore.Qt.AlignmentFlag.AlignCenter, self._text)
 
         p.end()
