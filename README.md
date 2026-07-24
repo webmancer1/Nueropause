@@ -37,6 +37,16 @@ Neuropause sits quietly in your **system tray** and tracks how long you've been 
 
 ---
 
+## Screenshots
+
+<p align="center">
+  <img src="assets/main_menu.png" width="32%" alt="Main Tray Menu" />
+  <img src="assets/settings.png" width="32%" alt="Settings Dialog" />
+  <img src="assets/break_page.png" width="32%" alt="Animated Break Overlay" />
+</p>
+
+---
+
 ##  Quick Start
 
 ### 1. Clone & enter the project
