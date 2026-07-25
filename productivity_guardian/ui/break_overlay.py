@@ -143,6 +143,16 @@ class BreakOverlay(QtWidgets.QWidget):
             self._container_opacity.setOpacity(value)
         self.update()
 
+    def _on_prompt_alpha_changed(self, value: float) -> None:
+        a = int(value * 255)
+        c = self._current_color
+        self._prompt_label.setStyleSheet(
+            f"color: rgba({c.red()}, {c.green()}, {c.blue()}, {a}); background: transparent; letter-spacing: 0.3px;"
+        )
+        self._emoji_label.setStyleSheet(
+            f"color: rgba(255, 255, 255, {a}); background: transparent;"
+        )
+
     def _build_ui(self) -> None:
         root = QtWidgets.QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -161,7 +171,7 @@ class BreakOverlay(QtWidgets.QWidget):
         centre = QtWidgets.QWidget()
         centre.setStyleSheet("background: transparent;")
         col = QtWidgets.QVBoxLayout(centre)
-        col.setContentsMargins(80, 80, 80, 80)
+        col.setContentsMargins(20, 40, 20, 40)
         col.setSpacing(0)
 
     
@@ -177,10 +187,7 @@ class BreakOverlay(QtWidgets.QWidget):
             ring_width=self._RING_WIDTH,
             parent=self,
         )
-        self._ring_canvas.setFixedSize(
-            (self._RING_RADIUS + self._RING_WIDTH + 40) * 2,
-            (self._RING_RADIUS + self._RING_WIDTH + 40) * 2,
-        )
+        self._ring_canvas.setFixedSize(340, 340)
 
         
         self._emoji_label = QtWidgets.QLabel("✨")
@@ -196,12 +203,11 @@ class BreakOverlay(QtWidgets.QWidget):
         self._prompt_label.setStyleSheet(f"color: {_ACCENT.name()}; background: transparent;")
 
         
-        self._prompt_opacity = QtWidgets.QGraphicsOpacityEffect(self._prompt_label)
-        self._prompt_label.setGraphicsEffect(self._prompt_opacity)
-
-        self._prompt_fade = QtCore.QPropertyAnimation(self._prompt_opacity, b"opacity", self)
+        # Use QVariantAnimation for text alpha instead of QGraphicsOpacityEffect
+        self._prompt_fade = QtCore.QVariantAnimation(self)
         self._prompt_fade.setDuration(400)
         self._prompt_fade.setEasingCurve(QtCore.QEasingCurve.Type.InOutSine)
+        self._prompt_fade.valueChanged.connect(self._on_prompt_alpha_changed)
         self._prompt_fade.finished.connect(self._on_prompt_fade_step)
         self._pending_prompt: tuple[str, str, QtGui.QColor] | None = None
         self._fading_prompt_out = False
@@ -232,23 +238,17 @@ class BreakOverlay(QtWidgets.QWidget):
         """)
         self._skip_button.clicked.connect(self._skip_break)
 
-        self._skip_shadow = QtWidgets.QGraphicsDropShadowEffect(self._skip_button)
-        self._skip_shadow.setBlurRadius(15)
-        self._skip_shadow.setColor(QtGui.QColor(255, 255, 255, 40))
-        self._skip_shadow.setOffset(0, 0)
-        self._skip_button.setGraphicsEffect(self._skip_shadow)
-
         col.addStretch(2)
         col.addWidget(self._title_label)
-        col.addSpacing(30)
+        col.addSpacing(20)
         col.addWidget(self._ring_canvas, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
-        col.addSpacing(28)
+        col.addSpacing(20)
         col.addWidget(self._emoji_label)
         col.addSpacing(8)
         col.addWidget(self._prompt_label)
-        col.addSpacing(20)
+        col.addSpacing(16)
         col.addWidget(sub)
-        col.addSpacing(40)
+        col.addSpacing(30)
         col.addWidget(self._skip_button, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
         col.addStretch(3)
 
@@ -266,7 +266,7 @@ class BreakOverlay(QtWidgets.QWidget):
         self._prompt_fade.stop()
         self._fading_prompt_out = False
         self._pending_prompt    = None
-        self._prompt_opacity.setOpacity(0.0)
+        self._on_prompt_alpha_changed(0.0)
         self._fade_alpha = 0.0
         if hasattr(self, '_container_opacity'):
             self._container_opacity.setOpacity(0.0)
@@ -386,11 +386,6 @@ class BreakOverlay(QtWidgets.QWidget):
         g = int(_ACCENT.green() + pulse * (_ACCENT2.green() - _ACCENT.green()))
         b = int(_ACCENT.blue()  + pulse * (_ACCENT2.blue()  - _ACCENT.blue()))
         self._ring_canvas.set_ring_color(QtGui.QColor(r, g, b))
-        
-        # Animate skip button shadow
-        if hasattr(self, '_skip_shadow'):
-            shadow_blur = 15 + 10 * math.sin(self._breathe_t * 3.0)
-            self._skip_shadow.setBlurRadius(max(0.0, shadow_blur))
 
         self.update()           
         self._ring_canvas.update()
@@ -418,10 +413,9 @@ class BreakOverlay(QtWidgets.QWidget):
         self._pending_prompt = None
 
         self._prompt_label.setText(state.prompt)
-        self._prompt_label.setStyleSheet(
-            f"color: {color.name()}; background: transparent; letter-spacing: 0.3px;"
-        )
         self._emoji_label.setText(emoji)
+        
+        self._on_prompt_alpha_changed(0.0)
 
         self._fading_prompt_out = False
         self._prompt_fade.stop()
@@ -438,7 +432,8 @@ class BreakOverlay(QtWidgets.QWidget):
     
         self._fading_prompt_out = True
         self._prompt_fade.stop()
-        self._prompt_fade.setStartValue(self._prompt_opacity.opacity())
+        current_val = self._prompt_fade.currentValue() if self._prompt_fade.state() == QtCore.QAbstractAnimation.State.Running else 1.0
+        self._prompt_fade.setStartValue(float(current_val))
         self._prompt_fade.setEndValue(0.0)
         self._prompt_fade.start()
 
@@ -453,9 +448,6 @@ class BreakOverlay(QtWidgets.QWidget):
         self._current_color  = color
 
         self._prompt_label.setText(text)
-        self._prompt_label.setStyleSheet(
-            f"color: {color.name()}; background: transparent; letter-spacing: 0.3px;"
-        )
         self._emoji_label.setText(emoji)
 
         
