@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Neuropause
+Comment=A productivity guardian and break reminder
+Exec=/home/jamesmwendwa/IdeaProjects/Neuropause/dist/Neuropause
+Icon=/home/jamesmwendwa/IdeaProjects/Neuropause/assets/icon.png
+Terminal=false
+Type=Application
+Categories=Utility;
