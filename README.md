@@ -50,22 +50,43 @@ Neuropause sits quietly in your **system tray** and tracks how long you've been 
 
 ---
 
-##  Quick Start
+##  Installation
 
-### 1. Clone & enter the project
+### Method 1: Standalone Executable (Easiest)
+
+If you just want to run the app without setting up Python, you can download the standalone executable:
+
+1. Download the latest `Neuropause` binary from the [Releases](https://github.com/webmancer1/Nueropause/releases) page.
+2. Make it executable (if necessary):
+   ```bash
+   chmod +x Neuropause
+   ```
+3. Run it:
+   ```bash
+   ./Neuropause
+   ```
+The app will start in the background and appear as a **system tray icon**.
+
+---
+
+### Method 2: Run from Source (For Developers)
+
+If you prefer to run from source or modify the code:
+
+#### 1. Clone & enter the project
 
 ```bash
-git clone https://github.com/your-username/neuropause.git
-cd neuropause
+git clone https://github.com/webmancer1/Nueropause.git
+cd Nueropause
 ```
 
-### 2. Create the virtual environment
+#### 2. Create the virtual environment
 
 ```bash
 python3 -m venv .venv
 ```
 
-### 3. Install dependencies
+#### 3. Install dependencies
 
 ```bash
 .venv/bin/pip install -r productivity_guardian/requirements.txt
@@ -77,7 +98,7 @@ python3 -m venv .venv
 > ```
 > Without it, pynput falls back to the **xlib** backend (already included via `python-xlib`) which works fine.
 
-### 4. Run it
+#### 4. Run it
 
 ```bash
 bash run.sh
