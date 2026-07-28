@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import os
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 from .config import (
@@ -54,7 +55,11 @@ class ProductivityGuardianApp(QtWidgets.QApplication):
 
     def _build_tray(self) -> None:
         self.tray_icon = QtWidgets.QSystemTrayIcon(self)
-        icon = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_ComputerIcon)
+        
+        base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        icon_path = os.path.join(base_path, 'assets', 'icon.png')
+        icon = QtGui.QIcon(icon_path)
+        
         self.tray_icon.setIcon(icon)
         self.tray_icon.setToolTip(TRAY_TOOLTIP)
 
