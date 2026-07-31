@@ -12,6 +12,7 @@ from ..config import (
     PROMPT_ROTATE_SECONDS,
 )
 from ..engine.wellness_engine import WellnessEngine
+from ..monitor.wake_lock import WakeLock
 
 
 _GRAD_STOPS: list[tuple[float, QtGui.QColor]] = [
@@ -94,6 +95,7 @@ class BreakOverlay(QtWidgets.QWidget):
         self.duration_seconds  = duration_seconds
         self.remaining_seconds = duration_seconds
         self.wellness_engine   = WellnessEngine()
+        self._wake_lock        = WakeLock("Break is currently active")
 
         
         self._current_emoji   = "✨"
@@ -257,6 +259,7 @@ class BreakOverlay(QtWidgets.QWidget):
 
  
     def start(self) -> None:
+        self._wake_lock.acquire()
         
         self.remaining_seconds  = self.duration_seconds
         self._fading_out        = False
@@ -476,6 +479,7 @@ class BreakOverlay(QtWidgets.QWidget):
             self._fade_alpha = 0.0
             if hasattr(self, '_container_opacity'):
                 self._container_opacity.setOpacity(0.0)  
+            self._wake_lock.release()
             self.break_finished.emit()
 
     
